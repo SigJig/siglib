@@ -1,5 +1,6 @@
 
 #include "heap.h"
+#include "pool.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,13 +16,13 @@ struct heap_intnl {
     size_t cap;
 };
 
-void*
+static void*
 p_malloc(size_t bytes)
 {
     return malloc(bytes);
 }
 
-void
+static void
 p_free(void* mem)
 {
     free(mem);
@@ -52,13 +53,13 @@ heap_destroy(struct heap_intnl* h)
 static size_t
 parent_idx(size_t index)
 {
-    return index < 3 ? 0 : index >> 1;
+    return index < 3 ? 0 : (index - 1) >> 1;
 }
 
 static size_t
 lchild_idx(size_t index)
 {
-    return index ? index << 1 : 1;
+    return index ? (index << 1) + 1 : 1;
 }
 
 static struct heap_item*
@@ -82,6 +83,15 @@ compare(size_t prio1, size_t prio2)
 {
     return prio1 < prio2;
 }
+
+/*
+                0
+            1       2
+        3     4   5     6
+    7     8  9 10 11 12 13 14
+
+    x - (x & 1 == 0)
+*/
 
 void
 heap_push(struct heap_intnl* h, int prio, void* value)
@@ -120,6 +130,7 @@ heap_pop(heap h)
 
     struct heap_item* root = item_addr(h, 0);
     void* value = root->value;
+    // printf("%d\n", root->prio);
 
     *root = *item_addr(h, h->len);
 
@@ -135,11 +146,8 @@ heap_pop(heap h)
 
         bool is_right = rchild ? !compare(lchild->prio, rchild->prio) : 0;
 
-        root = swap(root, lchild + is_right);
+        root = swap(lchild + is_right, root);
         lidx = lchild_idx(lidx + is_right);
-
-        lchild = item_addr(h, lidx);
-        rchild = lchild + 1;
     }
 
     return value;
@@ -161,6 +169,6 @@ heap_print(struct heap_intnl* h)
 {
     size_t len = h->len;
     for (size_t i = 0; i < len; i++) {
-        printf("%d\n", heap_pop(h));
+        heap_pop(h);
     }
 }

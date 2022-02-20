@@ -1,4 +1,5 @@
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 typedef struct heap_intnl* heap;
