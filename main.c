@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <time.h>
 
-#define AMOUNT 10000
-#define MEASUREMENTS 100
+#define AMOUNT 100000
+#define MEASUREMENTS 1
 
 struct ll_item {
     int prio;
@@ -21,17 +21,17 @@ struct ll {
     struct ll_item* front;
 };
 
-#define USE_POOL 1
+#define USE_POOL 0
 
 #if USE_POOL
-POOL_FIXED_STATIC(mempool, AMOUNT * 10, sizeof(struct ll_item));
+POOL_FIXED(mempool, AMOUNT, sizeof(struct ll_item));
 #endif
 
 static void*
 p_malloc(size_t nbytes)
 {
 #if USE_POOL
-    return pool_malloc(&mempool, nbytes);
+    return pool_reserve(&mempool);
 #else
     return malloc(nbytes);
 #endif
@@ -84,7 +84,7 @@ ll_free(struct ll* list)
     while (cur) {
         tmp = cur;
         cur = cur->next;
-        free(tmp);
+        free_item(tmp);
     }
 }
 
@@ -92,6 +92,8 @@ void
 ll_insert_sorted(struct ll* list, int prio, void* data)
 {
     struct ll_item* new = make_item(prio, data);
+
+    assert(new);
 
     if (!list->front) {
         list->front = new;
@@ -137,6 +139,7 @@ ll_pop(struct ll* list)
     }
 
     list->front = front->next;
+    // assert(list->front);
 
     free_item(front);
 
@@ -217,9 +220,12 @@ time_it(void* itm, addfn add, rmfn rm)
 
     for (size_t i = 0; i < MEASUREMENTS; i++) {
         clock_t t = clock();
+
         for (int j = 0; j < AMOUNT; j++) {
+            // for (int j = AMOUNT - 1; j >= 0; j--) {
             add(itm, j, NULL);
         }
+
         adds[i] = tdiff(t);
 
         t = clock();

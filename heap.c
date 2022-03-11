@@ -84,15 +84,6 @@ compare(size_t prio1, size_t prio2)
     return prio1 < prio2;
 }
 
-/*
-                0
-            1       2
-        3     4   5     6
-    7     8  9 10 11 12 13 14
-
-    x - (x & 1 == 0)
-*/
-
 void
 heap_push(struct heap_intnl* h, int prio, void* value)
 {
@@ -120,7 +111,7 @@ heap_push(struct heap_intnl* h, int prio, void* value)
 }
 
 void*
-heap_pop(heap h)
+heap_pop(struct heap_intnl* h)
 {
     if (!h->len) {
         return NULL;
@@ -154,7 +145,7 @@ heap_pop(heap h)
 }
 
 void*
-heap_root(heap h)
+heap_root(struct heap_intnl* h)
 {
     if (!h->len)
         return NULL;
